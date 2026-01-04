@@ -33,9 +33,14 @@
         <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full opacity-50 blur-xl"></div>
         <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-200 rounded-full opacity-50 blur-xl"></div>
 
+        <!-- NEW: 右上角改為計時器 -->
+        <div id="quiz-timer" class="absolute top-4 right-5 text-gray-500 text-sm font-mono font-bold tracking-wider z-10">
+            <i class="fa-regular fa-clock mr-1"></i><span id="timer-display">00:00</span>
+        </div>
+
         <!-- 1. 歡迎畫面 -->
-        <div id="screen-welcome" class="space-y-6">
-            <div class="text-6xl text-blue-600 mb-4">
+        <div id="screen-welcome" class="space-y-6 relative z-10">
+            <div class="text-6xl text-blue-600 mb-4 mt-4">
                 <i class="fa-solid fa-calculator"></i>
             </div>
             <h1 class="text-3xl font-bold text-gray-800">圓周率大挑戰</h1>
@@ -48,8 +53,8 @@
                 <p><i class="fa-solid fa-circle-info mr-2"></i>規則說明：</p>
                 <ul class="list-disc list-inside ml-2 mt-1">
                     <li>共 8 題 (x2 ~ x9)</li>
+                    <li>題目將隨機出現</li>
                     <li>請以小數點後兩位作答</li>
-                    <li>測驗結束後將紀錄成績</li>
                 </ul>
             </div>
 
@@ -66,8 +71,8 @@
         </div>
 
         <!-- 2. 測驗畫面 -->
-        <div id="screen-quiz" class="hidden space-y-8">
-            <div class="flex justify-between items-center text-gray-500 text-sm font-bold">
+        <div id="screen-quiz" class="hidden space-y-8 relative z-10">
+            <div class="flex justify-between items-center text-gray-500 text-sm font-bold mt-4">
                 <span id="progress-text">題號 1/8</span>
                 <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">得分: <span id="current-score">0</span></span>
             </div>
@@ -92,19 +97,24 @@
         </div>
 
         <!-- 3. 結果與上傳畫面 -->
-        <div id="screen-result" class="hidden space-y-6">
-            <div class="text-6xl mb-4" id="result-icon">
+        <div id="screen-result" class="hidden space-y-6 relative z-10">
+            <div class="text-6xl mb-4 mt-4" id="result-icon">
                 <i class="fa-solid fa-trophy text-yellow-400"></i>
             </div>
             
             <h2 class="text-3xl font-bold text-gray-800">測驗完成！</h2>
             
-            <div class="bg-gray-50 p-6 rounded-xl space-y-2">
-                <p class="text-gray-600">挑戰者：<span id="result-name" class="font-bold text-gray-800"></span></p>
-                <div class="text-4xl font-bold text-blue-600 py-2">
-                    <span id="final-score">0</span> / 100
+            <div class="bg-gray-50 p-6 rounded-xl space-y-3 text-left">
+                <p class="text-gray-600 border-b pb-2">挑戰者：<span id="result-name" class="font-bold text-gray-800 float-right"></span></p>
+                <!-- 修改這裡：顯示測驗耗時 -->
+                <p class="text-gray-600 border-b pb-2">測驗耗時：<span id="result-duration" class="font-bold text-gray-800 float-right text-lg mt-0 text-blue-600"></span></p>
+                
+                <div class="text-center pt-2">
+                    <div class="text-4xl font-bold text-blue-600 py-2">
+                        <span id="final-score">0</span> / 100
+                    </div>
+                    <p id="feedback-text" class="text-sm text-gray-500"></p>
                 </div>
-                <p id="feedback-text" class="text-sm text-gray-500"></p>
             </div>
 
             <div id="upload-section">
@@ -134,7 +144,7 @@
         // ==========================================
         // 設定區：請將下方的 URL 換成你的 Google Web App URL
         // ==========================================
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwwhtTDnaPDA7SULPgh--i6fR61Jea0ZDQZB3wN2IwPalI1HMaolFd1tycYUd7Y4h3Vg/exec'; 
+        const GOOGLE_SCRIPT_URL = '請將你的_GOOGLE_SCRIPT_URL_貼在這裡'; 
         // 例如: 'https://script.google.com/macros/s/AKfycbx.../exec'
         // ==========================================
 
@@ -144,7 +154,8 @@
             currentQuestionIndex: 0,
             score: 0,
             totalQuestions: 8, // 2 到 9 共 8 題
-            isSubmitting: false
+            startTime: null, // 開始時間
+            timerInterval: null // 計時器 Interval ID
         };
 
         const PI = 3.14;
@@ -155,6 +166,38 @@
             quiz: document.getElementById('screen-quiz'),
             result: document.getElementById('screen-result')
         };
+
+        // --- NEW: 計時器邏輯 ---
+        function startTimer() {
+            state.startTime = Date.now();
+            // 立即重置顯示
+            document.getElementById('timer-display').innerText = "00:00";
+            document.getElementById('quiz-timer').classList.remove('text-gray-500');
+            document.getElementById('quiz-timer').classList.add('text-blue-600', 'animate-pulse');
+            
+            state.timerInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = now - state.startTime;
+                
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                
+                const formattedTime = 
+                    (minutes < 10 ? '0' : '') + minutes + ':' + 
+                    (seconds < 10 ? '0' : '') + seconds;
+                
+                document.getElementById('timer-display').innerText = formattedTime;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+                document.getElementById('quiz-timer').classList.remove('animate-pulse');
+            }
+        }
+        // -----------------------
 
         // 洗牌演算法 (Fisher-Yates Shuffle)
         function shuffleArray(array) {
@@ -187,11 +230,13 @@
             state.currentQuestionIndex = 0;
             state.score = 0;
             
+            // 開始計時
+            startTimer();
+
             updateQuizUI();
             showScreen('quiz');
             
             // 讓使用者按 Enter 也可以送出
-            // 移除舊的監聽器以避免重複綁定 (雖然在這個簡單架構下 reload 後才會重置，但保險起見)
             const inputField = document.getElementById('answer-input');
             const newField = inputField.cloneNode(true);
             inputField.parentNode.replaceChild(newField, inputField);
@@ -203,7 +248,6 @@
         }
 
         function updateQuizUI() {
-            // 從隨機陣列中取出當前的乘數
             const currentMultiplier = state.questions[state.currentQuestionIndex];
 
             document.getElementById('progress-text').innerText = `題號 ${state.currentQuestionIndex + 1}/${state.totalQuestions}`;
@@ -217,16 +261,13 @@
 
         function submitAnswer() {
             const input = document.getElementById('answer-input');
-            // 如果輸入為空，不執行
             if (input.value === '') return;
             
             const userAnswer = parseFloat(input.value);
             
-            // 取得當前題目正確的乘數
             const currentMultiplier = state.questions[state.currentQuestionIndex];
-            const correctAnswer = Math.round((PI * currentMultiplier) * 100) / 100; // 四捨五入到第二位
+            const correctAnswer = Math.round((PI * currentMultiplier) * 100) / 100;
             
-            // 簡單的浮點數比較容錯 (實際上我們要求輸入兩位小數)
             if (Math.abs(userAnswer - correctAnswer) < 0.001) {
                 state.score++;
             }
@@ -241,8 +282,18 @@
         }
 
         function endQuiz() {
+            stopTimer(); // 停止計時
+
             const finalScore = Math.round((state.score / state.totalQuestions) * 100);
+            
+            // 計算最終耗時
+            const totalTime = Date.now() - state.startTime;
+            const minutes = Math.floor(totalTime / 60000);
+            const seconds = Math.floor((totalTime % 60000) / 1000);
+            const timeString = `${minutes}分${seconds}秒`;
+
             document.getElementById('result-name').innerText = state.username;
+            document.getElementById('result-duration').innerText = timeString;
             document.getElementById('final-score').innerText = finalScore;
 
             let feedback = "";
@@ -254,10 +305,10 @@
             document.getElementById('feedback-text').innerText = feedback;
             
             showScreen('result');
-            uploadData(finalScore);
+            uploadData(finalScore, timeString);
         }
 
-        function uploadData(score) {
+        function uploadData(score, durationStr) {
             if (GOOGLE_SCRIPT_URL.includes('請將你的')) {
                 document.getElementById('upload-section').classList.add('hidden');
                 document.getElementById('upload-fail').innerText = "開發者尚未設定 Google Script URL，無法儲存成績。";
@@ -265,12 +316,14 @@
                 return;
             }
 
+            // 這裡我們多傳送一個 'duration' 欄位，
+            // 如果你的 Google Script 只有寫入前三欄，這個欄位會被忽略，不會造成錯誤。
             const data = {
                 name: state.username,
-                score: score
+                score: score,
+                duration: durationStr 
             };
 
-            // 使用 fetch 送出 POST 請求
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', 
