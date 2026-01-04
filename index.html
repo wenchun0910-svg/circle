@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圓周率大挑戰 (Pi Challenge)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-md glass-panel rounded-2xl p-8 text-center relative overflow-hidden">
+        
+        <!-- 裝飾圓圈 -->
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full opacity-50 blur-xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-200 rounded-full opacity-50 blur-xl"></div>
+
+        <!-- 1. 歡迎畫面 -->
+        <div id="screen-welcome" class="space-y-6">
+            <div class="text-6xl text-blue-600 mb-4">
+                <i class="fa-solid fa-calculator"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800">圓周率大挑戰</h1>
+            <p class="text-gray-600">
+                挑戰你的心算能力！<br>
+                計算 <span class="font-bold text-blue-600">3.14</span> 乘以 2 到 9 的結果。
+            </p>
+            
+            <div class="text-left bg-blue-50 p-4 rounded-lg text-sm text-gray-700">
+                <p><i class="fa-solid fa-circle-info mr-2"></i>規則說明：</p>
+                <ul class="list-disc list-inside ml-2 mt-1">
+                    <li>共 8 題 (x2 ~ x9)</li>
+                    <li>請以小數點後兩位作答</li>
+                    <li>測驗結束後將紀錄成績</li>
+                </ul>
+            </div>
+
+            <div class="pt-4">
+                <input type="text" id="username-input" placeholder="請輸入你的名字/暱稱" 
+                    class="input-field w-full px-4 py-3 rounded-lg border-2 border-blue-200 focus:border-blue-500 focus:outline-none mb-4 text-center text-lg">
+                
+                <button onclick="startQuiz()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 transform hover:-translate-y-1">
+                    開始測驗
+                </button>
+                <p id="name-error" class="text-red-500 text-sm hidden mt-2">請先輸入名字！</p>
+            </div>
+        </div>
+
+        <!-- 2. 測驗畫面 -->
+        <div id="screen-quiz" class="hidden space-y-8">
+            <div class="flex justify-between items-center text-gray-500 text-sm font-bold">
+                <span id="progress-text">題號 1/8</span>
+                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">得分: <span id="current-score">0</span></span>
+            </div>
+
+            <div class="py-8">
+                <div class="text-2xl text-gray-500 mb-2">請問</div>
+                <div class="text-5xl font-bold text-gray-800 mb-2">
+                    3.14 × <span id="multiplier-display" class="text-blue-600">2</span>
+                </div>
+                <div class="text-2xl text-gray-500">= ?</div>
+            </div>
+
+            <div>
+                <input type="number" id="answer-input" step="0.01" placeholder="輸入答案" 
+                    class="input-field w-full text-center text-2xl font-bold px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none mb-4">
+                
+                <button onclick="submitAnswer()" 
+                    class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300">
+                    送出答案
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. 結果與上傳畫面 -->
+        <div id="screen-result" class="hidden space-y-6">
+            <div class="text-6xl mb-4" id="result-icon">
+                <i class="fa-solid fa-trophy text-yellow-400"></i>
+            </div>
+            
+            <h2 class="text-3xl font-bold text-gray-800">測驗完成！</h2>
+            
+            <div class="bg-gray-50 p-6 rounded-xl space-y-2">
+                <p class="text-gray-600">挑戰者：<span id="result-name" class="font-bold text-gray-800"></span></p>
+                <div class="text-4xl font-bold text-blue-600 py-2">
+                    <span id="final-score">0</span> / 100
+                </div>
+                <p id="feedback-text" class="text-sm text-gray-500"></p>
+            </div>
+
+            <div id="upload-section">
+                <p class="text-gray-600 mb-4 text-sm">正在將成績上傳至雲端...</p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                    <div class="bg-blue-600 h-2.5 rounded-full animate-pulse w-full"></div>
+                </div>
+            </div>
+
+            <div id="upload-success" class="hidden text-green-600 font-bold p-2 bg-green-50 rounded-lg">
+                <i class="fa-solid fa-check-circle mr-2"></i>成績已儲存至 Google 試算表！
+            </div>
+
+            <div id="upload-fail" class="hidden text-red-500 text-sm p-2 bg-red-50 rounded-lg">
+                上傳失敗，請檢查網路或聯繫管理員。
+            </div>
+
+            <button onclick="location.reload()" 
+                class="mt-6 w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                再次挑戰
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 設定區：請將下方的 URL 換成你的 Google Web App URL
+        // ==========================================
+        const GOOGLE_SCRIPT_URL = '請將你的_GOOGLE_SCRIPT_URL_貼在這裡'; 
+        // 例如: 'https://script.google.com/macros/s/AKfycbx.../exec'
+        // ==========================================
+
+        let state = {
+            username: '',
+            questions: [], // 儲存隨機排序後的題目 (乘數)
+            currentQuestionIndex: 0,
+            score: 0,
+            totalQuestions: 8, // 2 到 9 共 8 題
+            isSubmitting: false
+        };
+
+        const PI = 3.14;
+
+        // DOM 元素
+        const screens = {
+            welcome: document.getElementById('screen-welcome'),
+            quiz: document.getElementById('screen-quiz'),
+            result: document.getElementById('screen-result')
+        };
+
+        // 洗牌演算法 (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(el => el.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            const nameInput = document.getElementById('username-input');
+            const nameError = document.getElementById('name-error');
+            
+            if (!nameInput.value.trim()) {
+                nameError.classList.remove('hidden');
+                return;
+            }
+
+            state.username = nameInput.value.trim();
+            
+            // 生成 2 到 9 的陣列並隨機打亂
+            let multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
+            state.questions = shuffleArray(multipliers);
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            
+            updateQuizUI();
+            showScreen('quiz');
+            
+            // 讓使用者按 Enter 也可以送出
+            // 移除舊的監聽器以避免重複綁定 (雖然在這個簡單架構下 reload 後才會重置，但保險起見)
+            const inputField = document.getElementById('answer-input');
+            const newField = inputField.cloneNode(true);
+            inputField.parentNode.replaceChild(newField, inputField);
+            
+            newField.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') submitAnswer();
+            });
+            newField.focus();
+        }
+
+        function updateQuizUI() {
+            // 從隨機陣列中取出當前的乘數
+            const currentMultiplier = state.questions[state.currentQuestionIndex];
+
+            document.getElementById('progress-text').innerText = `題號 ${state.currentQuestionIndex + 1}/${state.totalQuestions}`;
+            document.getElementById('current-score').innerText = Math.round((state.score / state.totalQuestions) * 100);
+            document.getElementById('multiplier-display').innerText = currentMultiplier;
+            
+            const inputField = document.getElementById('answer-input');
+            inputField.value = '';
+            inputField.focus();
+        }
+
+        function submitAnswer() {
+            const input = document.getElementById('answer-input');
+            // 如果輸入為空，不執行
+            if (input.value === '') return;
+            
+            const userAnswer = parseFloat(input.value);
+            
+            // 取得當前題目正確的乘數
+            const currentMultiplier = state.questions[state.currentQuestionIndex];
+            const correctAnswer = Math.round((PI * currentMultiplier) * 100) / 100; // 四捨五入到第二位
+            
+            // 簡單的浮點數比較容錯 (實際上我們要求輸入兩位小數)
+            if (Math.abs(userAnswer - correctAnswer) < 0.001) {
+                state.score++;
+            }
+
+            state.currentQuestionIndex++;
+
+            if (state.currentQuestionIndex >= state.totalQuestions) {
+                endQuiz();
+            } else {
+                updateQuizUI();
+            }
+        }
+
+        function endQuiz() {
+            const finalScore = Math.round((state.score / state.totalQuestions) * 100);
+            document.getElementById('result-name').innerText = state.username;
+            document.getElementById('final-score').innerText = finalScore;
+
+            let feedback = "";
+            if (finalScore === 100) feedback = "太神啦！你是圓周率大師！";
+            else if (finalScore >= 80) feedback = "非常厲害！數學很不錯喔！";
+            else if (finalScore >= 60) feedback = "還不錯，再接再厲！";
+            else feedback = "加油，多練習幾次就會了！";
+            
+            document.getElementById('feedback-text').innerText = feedback;
+            
+            showScreen('result');
+            uploadData(finalScore);
+        }
+
+        function uploadData(score) {
+            if (GOOGLE_SCRIPT_URL.includes('請將你的')) {
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('upload-fail').innerText = "開發者尚未設定 Google Script URL，無法儲存成績。";
+                document.getElementById('upload-fail').classList.remove('hidden');
+                return;
+            }
+
+            const data = {
+                name: state.username,
+                score: score
+            };
+
+            // 使用 fetch 送出 POST 請求
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                redirect: 'follow',
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('upload-success').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('upload-fail').classList.remove('hidden');
+            });
+        }
+    </script>
+</body>
+</html>
