@@ -231,7 +231,7 @@
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 設置 (全局變數由宿主環境提供)
-       const firebaseConfig = {
+      const firebaseConfig = {
   apiKey: "AIzaSyBji6nQifLAXNlbqOSQpQUZ17fgh8mpvPg",
   authDomain: "circle-2b076.firebaseapp.com",
   projectId: "circle-2b076",
@@ -315,6 +315,12 @@
             errorMsg.classList.add('hidden');
             playerName = nameInput;
             document.getElementById('display-name').innerText = playerName;
+            
+            // 將題目陣列隨機打亂 (Fisher-Yates 洗牌演算法)
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
             
             generateQuiz();
             showScreen('quiz');
