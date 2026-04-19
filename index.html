@@ -130,6 +130,21 @@
         /* 隱藏區塊用 */
         .hidden { display: none !important; }
         
+        /* 管理模式操作列 */
+        .admin-col { display: none; }
+        .admin-mode .admin-col { display: table-cell; }
+        .btn-delete {
+            background-color: #dc2626;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        .btn-delete:hover { background-color: #b91c1c; }
+
         /* 裝飾圖騰 */
         .decor-corner {
             position: absolute;
@@ -163,11 +178,11 @@
             <!-- 開始畫面 -->
             <div id="start-screen" class="hidden flex flex-col items-center">
                 <h1 class="text-3xl font-black title-text mb-2">圓周率乘法挑戰</h1>
-                <p class="text-md mb-8 text-center text-gray-700">挑戰 3.14 乘以 2 到 9 的計算速度！<br>請留下大名以記錄成績。</p>
+                <p class="text-md mb-8 text-center text-gray-700">挑戰 3.14 乘以 2 到 9 的計算速度！<br>請留下尊姓大名以記錄成績。</p>
                 
                 <div class="w-full mb-6 relative">
-                    <label class="block text-lg font-bold mb-2 text-[#8b0000]" for="player-name">姓名：</label>
-                    <input type="text" id="player-name" class="input-chinese w-full text-left px-2" placeholder="請輸入您的姓名" maxlength="15">
+                    <label class="block text-lg font-bold mb-2 text-[#8b0000]" for="player-name">俠客姓名：</label>
+                    <input type="text" id="player-name" class="input-chinese w-full text-left px-2" placeholder="請輸入您的姓名（例如：王小明）" maxlength="15">
                     <p id="name-error" class="text-red-500 text-sm mt-1 hidden">請務必填寫姓名才能開始挑戰！</p>
                 </div>
                 
@@ -210,6 +225,7 @@
                                 <th>姓名</th>
                                 <th>分數</th>
                                 <th>時間</th>
+                                <th class="admin-col text-red-600">操作</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body">
@@ -219,6 +235,32 @@
                 </div>
 
                 <button id="btn-restart" class="btn-chinese mt-6">再次挑戰</button>
+
+                <!-- 管理員登入區塊 -->
+                <div class="mt-6 flex flex-col items-center w-full">
+                    <span id="admin-trigger" class="text-xs text-gray-400 cursor-pointer hover:text-[#8b0000] mb-2">管理員登入</span>
+                    
+                    <!-- 登入表單 -->
+                    <div id="admin-login-area" class="hidden flex items-center space-x-2 bg-white p-2 rounded border border-[#e5dec1]">
+                        <input type="password" id="admin-pwd" class="border border-gray-300 rounded px-2 py-1 w-32" placeholder="輸入密碼">
+                        <button id="btn-admin-login" class="bg-[#3b2e2a] text-white px-3 py-1 rounded text-sm hover:bg-black transition">登入</button>
+                    </div>
+
+                    <!-- 登入後的操作與設定 -->
+                    <div id="admin-settings-area" class="hidden flex flex-col items-center space-y-3 bg-white p-3 rounded border border-[#e5dec1] mt-2 shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm font-bold text-[#8b0000]">⚔️ 管理員模式啟動</span>
+                            <button id="btn-admin-logout" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition">登出</button>
+                        </div>
+                        <div class="flex items-center space-x-2 border-t border-[#e5dec1] pt-3 w-full justify-center">
+                            <input type="password" id="admin-new-pwd" class="border border-gray-300 rounded px-2 py-1 w-28 text-sm" placeholder="輸入新密碼">
+                            <button id="btn-change-pwd" class="bg-[#d4af37] text-white px-3 py-1 rounded text-sm hover:bg-[#c5a028] transition whitespace-nowrap">修改密碼</button>
+                        </div>
+                        <p id="admin-msg" class="text-xs mt-1 hidden"></p>
+                    </div>
+
+                    <p id="admin-error" class="text-red-500 text-xs mt-1 hidden">密碼錯誤</p>
+                </div>
             </div>
 
         </div>
@@ -228,10 +270,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 設置 (全局變數由宿主環境提供)
-      const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyBji6nQifLAXNlbqOSQpQUZ17fgh8mpvPg",
   authDomain: "circle-2b076.firebaseapp.com",
   projectId: "circle-2b076",
@@ -253,6 +295,10 @@
         let timeElapsedMs = 0;
         let currentScore = 0;
         let dbCollectionName = "pi_challenge_leaderboard";
+        
+        // 管理模式變數
+        let isAdmin = false;
+        const ADMIN_SETTINGS_COLLECTION = "pi_challenge_settings";
 
         // DOM 元素
         const screens = {
@@ -443,8 +489,9 @@
             const querySnapshot = await getDocs(collRef);
             let results = [];
             
-            querySnapshot.forEach((doc) => {
-                results.push(doc.data());
+            querySnapshot.forEach((docSnap) => {
+                // 將文件 ID 一併儲存，以便後續刪除使用
+                results.push({ id: docSnap.id, ...docSnap.data() });
             });
 
             // 本地排序：1. 分數高至低  2. 耗時少至多
@@ -489,13 +536,150 @@
                     <td class="font-bold">${safeName}</td>
                     <td class="text-red-600 font-bold">${entry.score}</td>
                     <td>${entry.timeStr}</td>
+                    <td class="admin-col"><button class="btn-delete" data-id="${entry.id}">刪除</button></td>
                 `;
                 tbody.appendChild(row);
             });
 
             document.getElementById('leaderboard-loading').classList.add('hidden');
             document.getElementById('leaderboard-table').classList.remove('hidden');
+
+            // 依據管理狀態更新表格顯示
+            toggleAdminUI();
         }
+
+        // 7. 管理模式邏輯
+        async function getAdminPassword() {
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', ADMIN_SETTINGS_COLLECTION, 'admin_config');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().password) {
+                    return docSnap.data().password;
+                } else {
+                    // 若尚未設定，預設為 pi314 並寫入資料庫
+                    await setDoc(docRef, { password: "pi314" }, { merge: true });
+                    return "pi314";
+                }
+            } catch (error) {
+                console.error("無法取得密碼", error);
+                return "pi314"; // 發生錯誤時的備用機制
+            }
+        }
+
+        function toggleAdminUI() {
+            const table = document.getElementById('leaderboard-table');
+            const loginArea = document.getElementById('admin-login-area');
+            const settingsArea = document.getElementById('admin-settings-area');
+            const pwdInput = document.getElementById('admin-pwd');
+            const msgEl = document.getElementById('admin-msg');
+            
+            if (isAdmin) {
+                table.classList.add('admin-mode');
+                loginArea.classList.add('hidden');
+                settingsArea.classList.remove('hidden');
+                msgEl.classList.add('hidden');
+            } else {
+                table.classList.remove('admin-mode');
+                loginArea.classList.remove('hidden');
+                settingsArea.classList.add('hidden');
+                pwdInput.value = '';
+            }
+        }
+
+        document.getElementById('admin-trigger').addEventListener('click', () => {
+            if (!isAdmin) {
+                document.getElementById('admin-login-area').classList.toggle('hidden');
+            } else {
+                document.getElementById('admin-settings-area').classList.toggle('hidden');
+            }
+            document.getElementById('admin-error').classList.add('hidden');
+        });
+
+        document.getElementById('btn-admin-login').addEventListener('click', async () => {
+            const pwdInputBtn = document.getElementById('btn-admin-login');
+            pwdInputBtn.innerText = "驗證中...";
+            pwdInputBtn.disabled = true;
+            
+            const pwd = document.getElementById('admin-pwd').value;
+            const correctPwd = await getAdminPassword();
+            
+            if (pwd === correctPwd) {
+                isAdmin = true;
+                document.getElementById('admin-error').classList.add('hidden');
+                toggleAdminUI();
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+            
+            pwdInputBtn.innerText = "登入";
+            pwdInputBtn.disabled = false;
+        });
+
+        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+            isAdmin = false;
+            toggleAdminUI();
+            document.getElementById('admin-settings-area').classList.add('hidden');
+        });
+
+        // 變更密碼邏輯
+        document.getElementById('btn-change-pwd').addEventListener('click', async () => {
+            const newPwd = document.getElementById('admin-new-pwd').value.trim();
+            const msgEl = document.getElementById('admin-msg');
+            msgEl.classList.remove('hidden', 'text-green-600', 'text-red-500');
+            
+            if (!newPwd) {
+                msgEl.innerText = "密碼不可為空！";
+                msgEl.classList.add('text-red-500');
+                return;
+            }
+
+            try {
+                const btn = document.getElementById('btn-change-pwd');
+                btn.innerText = "更新中...";
+                btn.disabled = true;
+                
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', ADMIN_SETTINGS_COLLECTION, 'admin_config');
+                await setDoc(docRef, { password: newPwd }, { merge: true });
+                
+                msgEl.innerText = "密碼變更成功！";
+                msgEl.classList.add('text-green-600');
+                document.getElementById('admin-new-pwd').value = '';
+                
+                btn.innerText = "修改密碼";
+                btn.disabled = false;
+            } catch (error) {
+                console.error("更新密碼失敗", error);
+                msgEl.innerText = "更新失敗，請檢查網路。";
+                msgEl.classList.add('text-red-500');
+                document.getElementById('btn-change-pwd').innerText = "修改密碼";
+                document.getElementById('btn-change-pwd').disabled = false;
+            }
+        });
+
+        // 使用事件委派處理動態生成的刪除按鈕
+        document.getElementById('leaderboard-body').addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-delete')) {
+                const docId = e.target.getAttribute('data-id');
+                // 使用原生的 Modal 替代 iframe 中可能被擋的 confirm，為求穩定這裡仍用 confirm，若無效則直接刪除
+                // 但為了更好的體驗，建議使用自訂 UI Modal，此處先使用原生 confirm 示範
+                if (window.confirm("確定要刪除這筆挑戰紀錄嗎？此動作無法復原。")) {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', dbCollectionName, docId);
+                        await deleteDoc(docRef);
+                        
+                        // 重新讀取並渲染排行榜
+                        document.getElementById('leaderboard-loading').classList.remove('hidden');
+                        document.getElementById('leaderboard-table').classList.add('hidden');
+                        const collRef = collection(db, 'artifacts', appId, 'public', 'data', dbCollectionName);
+                        await fetchAndRenderLeaderboard(collRef);
+                        alert("紀錄已刪除！");
+                    } catch (error) {
+                        console.error("刪除失敗:", error);
+                        alert("刪除失敗，請檢查權限或網路連線。");
+                    }
+                }
+            }
+        });
 
         // 6. 其他按鈕邏輯
         document.getElementById('btn-restart').addEventListener('click', () => {
