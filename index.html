@@ -178,11 +178,11 @@
             <!-- 開始畫面 -->
             <div id="start-screen" class="hidden flex flex-col items-center">
                 <h1 class="text-3xl font-black title-text mb-2">圓周率乘法挑戰</h1>
-                <p class="text-md mb-8 text-center text-gray-700">挑戰 3.14 乘以 2 到 9 的計算速度！<br>請留下大名以記錄成績。</p>
+                <p class="text-md mb-8 text-center text-gray-700">挑戰 3.14 乘以 2 到 9 的計算速度！<br>請留下尊姓大名以記錄成績。</p>
                 
                 <div class="w-full mb-6 relative">
-                    <label class="block text-lg font-bold mb-2 text-[#8b0000]" for="player-name">姓名：</label>
-                    <input type="text" id="player-name" class="input-chinese w-full text-left px-2" placeholder="請輸入您的姓名" maxlength="15">
+                    <label class="block text-lg font-bold mb-2 text-[#8b0000]" for="player-name">俠客姓名：</label>
+                    <input type="text" id="player-name" class="input-chinese w-full text-left px-2" placeholder="請輸入您的姓名（例如：王小明）" maxlength="15">
                     <p id="name-error" class="text-red-500 text-sm mt-1 hidden">請務必填寫姓名才能開始挑戰！</p>
                 </div>
                 
@@ -214,7 +214,7 @@
                     <p class="text-lg">耗時：<span id="final-time" class="font-bold text-[#8b0000]"></span></p>
                 </div>
 
-                <h3 class="text-xl font-bold title-text mb-2">🏆 英雄榜 (Top 20) 🏆</h3>
+                <h3 id="leaderboard-header-title" class="text-xl font-bold title-text mb-2">🏆 英雄榜 (Top 20) 🏆</h3>
                 <div id="leaderboard-loading" class="text-sm text-gray-500 my-4">正在獲取最新榜單...</div>
                 
                 <div class="w-full overflow-x-auto">
@@ -257,6 +257,12 @@
                             <button id="btn-change-pwd" class="bg-[#d4af37] text-white px-3 py-1 rounded text-sm hover:bg-[#c5a028] transition whitespace-nowrap">修改密碼</button>
                         </div>
                         <p id="admin-msg" class="text-xs mt-1 hidden"></p>
+
+                        <!-- 新增：觀看近一週紀錄切換按鈕 -->
+                        <div class="flex items-center space-x-2 border-t border-[#e5dec1] pt-3 w-full justify-center">
+                            <button id="btn-admin-view-all" class="bg-[#8b0000] text-white px-3 py-1 rounded text-sm hover:bg-[#a52a2a] transition whitespace-nowrap">觀看近一週紀錄</button>
+                            <button id="btn-admin-view-top20" class="hidden bg-[#d4af37] text-white px-3 py-1 rounded text-sm hover:bg-[#c5a028] transition whitespace-nowrap">返回英雄榜</button>
+                        </div>
                     </div>
 
                     <p id="admin-error" class="text-red-500 text-xs mt-1 hidden">密碼錯誤</p>
@@ -273,7 +279,7 @@
         import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 設置 (全局變數由宿主環境提供)
-     const firebaseConfig = {
+           const firebaseConfig = {
   apiKey: "AIzaSyBji6nQifLAXNlbqOSQpQUZ17fgh8mpvPg",
   authDomain: "circle-2b076.firebaseapp.com",
   projectId: "circle-2b076",
@@ -281,6 +287,7 @@
   messagingSenderId: "607347560539",
   appId: "1:607347560539:web:cae285ebb16228d51f2f7e"
 };
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pi-app';
         
         const app = initializeApp(firebaseConfig);
@@ -298,6 +305,7 @@
         
         // 管理模式變數
         let isAdmin = false;
+        let currentViewMode = 'top20'; // 新增：控制當前觀看模式 ('top20' 或 'all_week')
         const ADMIN_SETTINGS_COLLECTION = "pi_challenge_settings";
 
         // DOM 元素
@@ -494,17 +502,28 @@
                 results.push({ id: docSnap.id, ...docSnap.data() });
             });
 
-            // 本地排序：1. 分數高至低  2. 耗時少至多
-            results.sort((a, b) => {
-                if (b.score !== a.score) {
-                    return b.score - a.score;
-                }
-                return a.timeMs - b.timeMs;
-            });
+            let displayData = [];
 
-            // 取前 20 名
-            const top20 = results.slice(0, 20);
-            renderLeaderboardTable(top20);
+            if (currentViewMode === 'top20') {
+                document.getElementById('leaderboard-header-title').innerText = "🏆 英雄榜 (Top 20) 🏆";
+                // 本地排序：1. 分數高至低  2. 耗時少至多
+                results.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    return a.timeMs - b.timeMs;
+                });
+                displayData = results.slice(0, 20);
+            } else {
+                document.getElementById('leaderboard-header-title').innerText = "📋 近一週所有紀錄";
+                // 計算一週前的時間戳
+                const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+                displayData = results.filter(r => r.timestamp >= oneWeekAgo);
+                // 依時間排序，最新在前
+                displayData.sort((a, b) => b.timestamp - a.timestamp);
+            }
+
+            renderLeaderboardTable(displayData);
         }
 
         function renderLeaderboardTable(data) {
@@ -518,9 +537,12 @@
                 // 排名樣式處理
                 let rankClass = "";
                 let rankIcon = rank;
-                if (rank === 1) { rankClass = "rank-1"; rankIcon = "🥇 狀元"; }
-                else if (rank === 2) { rankClass = "rank-2"; rankIcon = "🥈 榜眼"; }
-                else if (rank === 3) { rankClass = "rank-3"; rankIcon = "🥉 探花"; }
+                
+                if (currentViewMode === 'top20') {
+                    if (rank === 1) { rankClass = "rank-1"; rankIcon = "🥇 狀元"; }
+                    else if (rank === 2) { rankClass = "rank-2"; rankIcon = "🥈 榜眼"; }
+                    else if (rank === 3) { rankClass = "rank-3"; rankIcon = "🥉 探花"; }
+                }
                 
                 // 高亮當前玩家最新一筆 (簡單判斷名稱與時間相符)
                 const isCurrentPlayer = (entry.name === playerName && entry.timeMs === timeElapsedMs && entry.score === currentScore);
@@ -530,12 +552,20 @@
 
                 // 防XSS處理
                 const safeName = entry.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                
+                // 時間與日期處理
+                let timeHtml = entry.timeStr;
+                if (currentViewMode === 'all_week' && entry.timestamp) {
+                    const d = new Date(entry.timestamp);
+                    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    timeHtml += `<br><span class="text-[10.5px] text-gray-500 whitespace-nowrap">${dateStr}</span>`;
+                }
 
                 row.innerHTML = `
                     <td class="${rankClass}">${rankIcon}</td>
                     <td class="font-bold">${safeName}</td>
                     <td class="text-red-600 font-bold">${entry.score}</td>
-                    <td>${entry.timeStr}</td>
+                    <td>${timeHtml}</td>
                     <td class="admin-col"><button class="btn-delete" data-id="${entry.id}">刪除</button></td>
                 `;
                 tbody.appendChild(row);
@@ -578,47 +608,47 @@
                 loginArea.classList.add('hidden');
                 settingsArea.classList.remove('hidden');
                 msgEl.classList.add('hidden');
-            } else {
-                table.classList.remove('admin-mode');
-                loginArea.classList.remove('hidden');
-                settingsArea.classList.add('hidden');
-                pwdInput.value = '';
-            }
-        }
-
-        document.getElementById('admin-trigger').addEventListener('click', () => {
-            if (!isAdmin) {
-                document.getElementById('admin-login-area').classList.toggle('hidden');
-            } else {
-                document.getElementById('admin-settings-area').classList.toggle('hidden');
-            }
-            document.getElementById('admin-error').classList.add('hidden');
-        });
-
-        document.getElementById('btn-admin-login').addEventListener('click', async () => {
-            const pwdInputBtn = document.getElementById('btn-admin-login');
-            pwdInputBtn.innerText = "驗證中...";
-            pwdInputBtn.disabled = true;
-            
-            const pwd = document.getElementById('admin-pwd').value;
-            const correctPwd = await getAdminPassword();
-            
-            if (pwd === correctPwd) {
-                isAdmin = true;
-                document.getElementById('admin-error').classList.add('hidden');
-                toggleAdminUI();
-            } else {
-                document.getElementById('admin-error').classList.remove('hidden');
-            }
-            
-            pwdInputBtn.innerText = "登入";
-            pwdInputBtn.disabled = false;
-        });
-
-        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+        document.getElementById('btn-admin-logout').addEventListener('click', async () => {
             isAdmin = false;
             toggleAdminUI();
             document.getElementById('admin-settings-area').classList.add('hidden');
+            
+            // 登出時若在全紀錄模式，自動返回英雄榜
+            if (currentViewMode !== 'top20') {
+                currentViewMode = 'top20';
+                document.getElementById('btn-admin-view-top20').classList.add('hidden');
+                document.getElementById('btn-admin-view-all').classList.remove('hidden');
+                
+                document.getElementById('leaderboard-loading').classList.remove('hidden');
+                document.getElementById('leaderboard-table').classList.add('hidden');
+                const collRef = collection(db, 'artifacts', appId, 'public', 'data', dbCollectionName);
+                await fetchAndRenderLeaderboard(collRef);
+            }
+        });
+
+        // 新增：切換觀看模式的事件
+        document.getElementById('btn-admin-view-all').addEventListener('click', async () => {
+            currentViewMode = 'all_week';
+            document.getElementById('btn-admin-view-all').classList.add('hidden');
+            document.getElementById('btn-admin-view-top20').classList.remove('hidden');
+            
+            document.getElementById('leaderboard-loading').classList.remove('hidden');
+            document.getElementById('leaderboard-table').classList.add('hidden');
+            
+            const collRef = collection(db, 'artifacts', appId, 'public', 'data', dbCollectionName);
+            await fetchAndRenderLeaderboard(collRef);
+        });
+
+        document.getElementById('btn-admin-view-top20').addEventListener('click', async () => {
+            currentViewMode = 'top20';
+            document.getElementById('btn-admin-view-top20').classList.add('hidden');
+            document.getElementById('btn-admin-view-all').classList.remove('hidden');
+            
+            document.getElementById('leaderboard-loading').classList.remove('hidden');
+            document.getElementById('leaderboard-table').classList.add('hidden');
+            
+            const collRef = collection(db, 'artifacts', appId, 'public', 'data', dbCollectionName);
+            await fetchAndRenderLeaderboard(collRef);
         });
 
         // 變更密碼邏輯
@@ -691,6 +721,13 @@
             showScreen('result');
             document.getElementById('result-title').innerText = "英雄榜";
             document.getElementById('result-title').nextElementSibling.classList.add('hidden'); // 隱藏個人分數區塊
+            
+            // 確保一般玩家觀看時為英雄榜模式
+            if (!isAdmin && currentViewMode !== 'top20') {
+                currentViewMode = 'top20';
+                document.getElementById('btn-admin-view-top20').classList.add('hidden');
+                document.getElementById('btn-admin-view-all').classList.remove('hidden');
+            }
             
             document.getElementById('leaderboard-loading').classList.remove('hidden');
             document.getElementById('leaderboard-table').classList.add('hidden');
