@@ -13,10 +13,10 @@
         /* 中國風視覺設計 */
         body {
             font-family: 'Noto Serif TC', serif;
-            background-color: #f8f4e6; /* 宣紙色 */
-            background-image: radial-gradient(#e5dec1 1px, transparent 1px);
+            background-color: #f0f8ff; /* 青花瓷白底 */
+            background-image: radial-gradient(#b3d9ff 1px, transparent 1px);
             background-size: 20px 20px;
-            color: #3b2e2a;
+            color: #001f3f;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -26,8 +26,8 @@
 
         /* 古典邊框樣式 */
         .chinese-panel {
-            background-color: #fffaf0;
-            border: 2px solid #8b0000; /* 硃砂紅 */
+            background-color: #ffffff;
+            border: 2px solid #003366; /* 青花深藍 */
             border-radius: 4px;
             padding: 4px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -38,24 +38,24 @@
         }
 
         .chinese-panel-inner {
-            border: 1px solid #8b0000;
+            border: 1px solid #003366;
             padding: 2rem 1.5rem;
             position: relative;
         }
 
         /* 標題樣式 */
         .title-text {
-            color: #8b0000;
-            text-shadow: 1px 1px 0px #d4af37; /* 金色陰影 */
+            color: #003366;
+            text-shadow: 1px 1px 0px #87ceeb; /* 淺藍陰影 */
             letter-spacing: 0.1em;
             text-align: center;
         }
 
         /* 古典按鈕 */
         .btn-chinese {
-            background-color: #8b0000;
-            color: #f8f4e6;
-            border: 2px solid #d4af37; /* 金色邊框 */
+            background-color: #003366;
+            color: #ffffff;
+            border: 2px solid #4169e1; /* 皇家藍邊框 */
             padding: 0.5rem 2rem;
             font-size: 1.25rem;
             font-weight: 700;
@@ -63,13 +63,13 @@
             transition: all 0.3s ease;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(139, 0, 0, 0.2);
+            box-shadow: 0 4px 6px rgba(0, 51, 102, 0.2);
         }
 
         .btn-chinese:hover {
-            background-color: #a52a2a;
+            background-color: #002244;
             transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(139, 0, 0, 0.3);
+            box-shadow: 0 6px 8px rgba(0, 51, 102, 0.3);
         }
 
         .btn-chinese:disabled {
@@ -83,18 +83,18 @@
         /* 輸入框樣式 */
         .input-chinese {
             border: none;
-            border-bottom: 2px solid #8b0000;
+            border-bottom: 2px solid #003366;
             background: transparent;
             text-align: center;
             font-size: 1.25rem;
-            color: #8b0000;
+            color: #003366;
             font-weight: 700;
             outline: none;
             transition: border-color 0.3s;
         }
 
         .input-chinese:focus {
-            border-bottom: 2px solid #d4af37;
+            border-bottom: 2px solid #4169e1;
         }
         
         /* 隱藏數字輸入框的上下箭頭 */
@@ -114,12 +114,12 @@
             margin-top: 1rem;
         }
         .leaderboard-table th {
-            border-bottom: 2px solid #8b0000;
+            border-bottom: 2px solid #003366;
             padding: 0.5rem;
-            color: #8b0000;
+            color: #003366;
         }
         .leaderboard-table td {
-            border-bottom: 1px dashed #d4af37;
+            border-bottom: 1px dashed #4169e1;
             padding: 0.5rem;
             text-align: center;
         }
@@ -150,7 +150,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            border: 2px solid #8b0000;
+            border: 2px solid #003366;
         }
         .tl { top: -4px; left: -4px; border-right: none; border-bottom: none; }
         .tr { top: -4px; right: -4px; border-left: none; border-bottom: none; }
@@ -181,20 +181,20 @@
                 <p class="text-md mb-8 text-center text-gray-700">挑戰 3.14 乘以 2 到 9 的計算速度！<br>請留下尊姓大名以記錄成績。</p>
                 
                 <div class="w-full mb-6 relative">
-                    <label class="block text-lg font-bold mb-2 text-[#8b0000]" for="player-name">俠客姓名：</label>
+                    <label class="block text-lg font-bold mb-2 text-[#003366]" for="player-name">俠客姓名：</label>
                     <input type="text" id="player-name" class="input-chinese w-full text-left px-2" placeholder="請輸入您的姓名（例如：王小明）" maxlength="15">
                     <p id="name-error" class="text-red-500 text-sm mt-1 hidden">請務必填寫姓名才能開始挑戰！</p>
                 </div>
                 
                 <button id="btn-start" class="btn-chinese mt-4">開始挑戰</button>
-                <button id="btn-view-leaderboard" class="mt-4 text-[#8b0000] underline hover:text-[#a52a2a] transition">查看英雄榜</button>
+                <button id="btn-view-leaderboard" class="mt-4 text-[#003366] underline hover:text-[#002244] transition">查看英雄榜</button>
             </div>
 
             <!-- 測驗畫面 -->
             <div id="quiz-screen" class="hidden flex flex-col">
-                <div class="flex justify-between items-center border-b-2 border-[#8b0000] pb-2 mb-4">
-                    <div class="text-lg font-bold text-[#8b0000]">姓名：<span id="display-name" class="text-[#3b2e2a]"></span></div>
-                    <div class="text-lg font-bold text-[#8b0000]">時間：<span id="display-time" class="text-red-600">00:00</span></div>
+                <div class="flex justify-between items-center border-b-2 border-[#003366] pb-2 mb-4">
+                    <div class="text-lg font-bold text-[#003366]">姓名：<span id="display-name" class="text-[#001f3f]"></span></div>
+                    <div class="text-lg font-bold text-[#003366]">時間：<span id="display-time" class="text-blue-600">00:00</span></div>
                 </div>
 
                 <div id="questions-container" class="space-y-4 mb-6">
@@ -209,9 +209,9 @@
             <div id="result-screen" class="hidden flex flex-col items-center">
                 <h2 class="text-3xl font-black title-text mb-4" id="result-title">測驗完成</h2>
                 
-                <div class="bg-[#f0e6d2] w-full p-4 rounded border border-[#d4af37] mb-6 text-center shadow-inner">
-                    <p class="text-lg mb-1">得分：<span id="final-score" class="text-3xl font-bold text-red-600"></span> 分</p>
-                    <p class="text-lg">耗時：<span id="final-time" class="font-bold text-[#8b0000]"></span></p>
+                <div class="bg-[#e6f2ff] w-full p-4 rounded border border-[#4169e1] mb-6 text-center shadow-inner">
+                    <p class="text-lg mb-1">得分：<span id="final-score" class="text-3xl font-bold text-blue-600"></span> 分</p>
+                    <p class="text-lg">耗時：<span id="final-time" class="font-bold text-[#003366]"></span></p>
                 </div>
 
                 <h3 id="leaderboard-header-title" class="text-xl font-bold title-text mb-2">🏆 英雄榜 (Top 20) 🏆</h3>
@@ -225,7 +225,7 @@
                                 <th>姓名</th>
                                 <th>分數</th>
                                 <th>時間</th>
-                                <th class="admin-col text-red-600">操作</th>
+                                <th class="admin-col text-blue-600">操作</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body">
@@ -238,30 +238,30 @@
 
                 <!-- 管理員登入區塊 -->
                 <div class="mt-6 flex flex-col items-center w-full">
-                    <span id="admin-trigger" class="text-xs text-gray-400 cursor-pointer hover:text-[#8b0000] mb-2">管理員登入</span>
+                    <span id="admin-trigger" class="text-xs text-gray-400 cursor-pointer hover:text-[#003366] mb-2">管理員登入</span>
                     
                     <!-- 登入表單 -->
-                    <div id="admin-login-area" class="hidden flex items-center space-x-2 bg-white p-2 rounded border border-[#e5dec1]">
+                    <div id="admin-login-area" class="hidden flex items-center space-x-2 bg-white p-2 rounded border border-[#b3d9ff]">
                         <input type="password" id="admin-pwd" class="border border-gray-300 rounded px-2 py-1 w-32" placeholder="輸入密碼">
-                        <button id="btn-admin-login" class="bg-[#3b2e2a] text-white px-3 py-1 rounded text-sm hover:bg-black transition">登入</button>
+                        <button id="btn-admin-login" class="bg-[#001f3f] text-white px-3 py-1 rounded text-sm hover:bg-black transition">登入</button>
                     </div>
 
                     <!-- 登入後的操作與設定 -->
-                    <div id="admin-settings-area" class="hidden flex flex-col items-center space-y-3 bg-white p-3 rounded border border-[#e5dec1] mt-2 shadow-sm">
+                    <div id="admin-settings-area" class="hidden flex flex-col items-center space-y-3 bg-white p-3 rounded border border-[#b3d9ff] mt-2 shadow-sm">
                         <div class="flex items-center space-x-3">
-                            <span class="text-sm font-bold text-[#8b0000]">⚔️ 管理員模式啟動</span>
+                            <span class="text-sm font-bold text-[#003366]">⚔️ 管理員模式啟動</span>
                             <button id="btn-admin-logout" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition">登出</button>
                         </div>
-                        <div class="flex items-center space-x-2 border-t border-[#e5dec1] pt-3 w-full justify-center">
+                        <div class="flex items-center space-x-2 border-t border-[#b3d9ff] pt-3 w-full justify-center">
                             <input type="password" id="admin-new-pwd" class="border border-gray-300 rounded px-2 py-1 w-28 text-sm" placeholder="輸入新密碼">
-                            <button id="btn-change-pwd" class="bg-[#d4af37] text-white px-3 py-1 rounded text-sm hover:bg-[#c5a028] transition whitespace-nowrap">修改密碼</button>
+                            <button id="btn-change-pwd" class="bg-[#4169e1] text-white px-3 py-1 rounded text-sm hover:bg-[#27408b] transition whitespace-nowrap">修改密碼</button>
                         </div>
                         <p id="admin-msg" class="text-xs mt-1 hidden"></p>
 
                         <!-- 新增：觀看近一週紀錄切換按鈕 -->
-                        <div class="flex items-center space-x-2 border-t border-[#e5dec1] pt-3 w-full justify-center">
-                            <button id="btn-admin-view-all" class="bg-[#8b0000] text-white px-3 py-1 rounded text-sm hover:bg-[#a52a2a] transition whitespace-nowrap">觀看近一週紀錄</button>
-                            <button id="btn-admin-view-top20" class="hidden bg-[#d4af37] text-white px-3 py-1 rounded text-sm hover:bg-[#c5a028] transition whitespace-nowrap">返回英雄榜</button>
+                        <div class="flex items-center space-x-2 border-t border-[#b3d9ff] pt-3 w-full justify-center">
+                            <button id="btn-admin-view-all" class="bg-[#003366] text-white px-3 py-1 rounded text-sm hover:bg-[#002244] transition whitespace-nowrap">觀看近一週紀錄</button>
+                            <button id="btn-admin-view-top20" class="hidden bg-[#4169e1] text-white px-3 py-1 rounded text-sm hover:bg-[#27408b] transition whitespace-nowrap">返回英雄榜</button>
                         </div>
                     </div>
 
@@ -279,7 +279,7 @@
         import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 設置 (全局變數由宿主環境提供)
-           const firebaseConfig = {
+          const firebaseConfig = {
   apiKey: "AIzaSyBji6nQifLAXNlbqOSQpQUZ17fgh8mpvPg",
   authDomain: "circle-2b076.firebaseapp.com",
   projectId: "circle-2b076",
@@ -387,7 +387,7 @@
             
             questions.forEach((q, index) => {
                 const row = document.createElement('div');
-                row.className = "flex items-center justify-between bg-white p-3 rounded shadow-sm border border-[#e5dec1]";
+                row.className = "flex items-center justify-between bg-white p-3 rounded shadow-sm border border-[#b3d9ff]";
                 row.innerHTML = `
                     <span class="text-xl font-bold ml-2">3.14 &times; ${q.multiplier} =</span>
                     <input type="number" step="0.01" id="ans-${index}" class="input-chinese w-32 ml-4" placeholder="請作答">
@@ -547,7 +547,7 @@
                 // 高亮當前玩家最新一筆 (簡單判斷名稱與時間相符)
                 const isCurrentPlayer = (entry.name === playerName && entry.timeMs === timeElapsedMs && entry.score === currentScore);
                 if (isCurrentPlayer) {
-                    row.classList.add('bg-[#fdeed6]'); // 稍微高亮背景
+                    row.classList.add('bg-[#dbeafe]'); // 稍微高亮背景 (淺藍)
                 }
 
                 // 防XSS處理
@@ -564,7 +564,7 @@
                 row.innerHTML = `
                     <td class="${rankClass}">${rankIcon}</td>
                     <td class="font-bold">${safeName}</td>
-                    <td class="text-red-600 font-bold">${entry.score}</td>
+                    <td class="text-blue-600 font-bold">${entry.score}</td>
                     <td>${timeHtml}</td>
                     <td class="admin-col"><button class="btn-delete" data-id="${entry.id}">刪除</button></td>
                 `;
@@ -608,6 +608,43 @@
                 loginArea.classList.add('hidden');
                 settingsArea.classList.remove('hidden');
                 msgEl.classList.add('hidden');
+            } else {
+                table.classList.remove('admin-mode');
+                loginArea.classList.remove('hidden');
+                settingsArea.classList.add('hidden');
+                pwdInput.value = '';
+            }
+        }
+
+        document.getElementById('admin-trigger').addEventListener('click', () => {
+            if (!isAdmin) {
+                document.getElementById('admin-login-area').classList.toggle('hidden');
+            } else {
+                document.getElementById('admin-settings-area').classList.toggle('hidden');
+            }
+            document.getElementById('admin-error').classList.add('hidden');
+        });
+
+        document.getElementById('btn-admin-login').addEventListener('click', async () => {
+            const pwdInputBtn = document.getElementById('btn-admin-login');
+            pwdInputBtn.innerText = "驗證中...";
+            pwdInputBtn.disabled = true;
+            
+            const pwd = document.getElementById('admin-pwd').value;
+            const correctPwd = await getAdminPassword();
+            
+            if (pwd === correctPwd) {
+                isAdmin = true;
+                document.getElementById('admin-error').classList.add('hidden');
+                toggleAdminUI();
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+            
+            pwdInputBtn.innerText = "登入";
+            pwdInputBtn.disabled = false;
+        });
+
         document.getElementById('btn-admin-logout').addEventListener('click', async () => {
             isAdmin = false;
             toggleAdminUI();
